@@ -29,7 +29,7 @@ namespace GameLogic {
 
 			if (loadAssetHandles == null) {
 				loadAssetHandles = new List<AssetHandle>();
-				m_assetHandleDic.TryAdd(this, loadAssetHandles);
+				m_assetHandleDic.TryAdd(source, loadAssetHandles);
 			}
 
 			if (loadAssetHandles is {Count: > 0}) {
@@ -43,7 +43,8 @@ namespace GameLogic {
 			var loadAssetHandle = GameModule.Resource.LoadAssetAsyncHandle<T>(name);
 			try {
 				await loadAssetHandle.Task;
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				throw new Exception($"AssetManager LoadAssetAsyncHandle Failed : {e.Message}");
 			}
 
@@ -86,7 +87,7 @@ namespace GameLogic {
 
 			if (loadAssetHandles == null) {
 				loadAssetHandles = new List<AssetHandle>();
-				m_assetHandleDic.TryAdd(this, loadAssetHandles);
+				m_assetHandleDic.TryAdd(source, loadAssetHandles);
 			}
 
 			if (loadAssetHandles is {Count: > 0}) {
@@ -100,7 +101,8 @@ namespace GameLogic {
 			var loadAssetHandle = GameModule.Resource.LoadAssetAsyncHandle<ConfigDatabase>(name);
 			try {
 				await loadAssetHandle.Task;
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				throw new Exception($"AssetManager LoadConfigAsync Failed : {e.Message}");
 			}
 
@@ -293,13 +295,13 @@ namespace GameLogic {
 		/// <param name="source">脚本源,一般是this</param>
 		public async UniTask<object> GetAssetOrLoad(Type type, string name, object source) {
 			source ??= this;
-			var methodInfo = typeof(AssetManager).GetMethod(nameof(GetAssetOrLoad), BindingFlags.Instance | BindingFlags.Public, binder: null, types: new[] {typeof(string), typeof(object)},
-				modifiers: null);
+			var methodInfo = typeof(AssetManager).GetMethod(nameof(GetAssetOrLoad), BindingFlags.Instance | BindingFlags.Public, binder: null,
+				types: new[] {typeof(string), typeof(object)}, modifiers: null);
 			var genericMethod = methodInfo.MakeGenericMethod(type);
 			var taskObj = genericMethod.Invoke(this, new object[] {name, source});
 
 			var castMethod = this.GetType().GetMethod(nameof(CastToObject), BindingFlags.NonPublic | BindingFlags.Instance) !.MakeGenericMethod(type);
-			var castedTask = (UniTask<object>)castMethod.Invoke(this, new object[] {taskObj});
+			var castedTask = (UniTask<object>) castMethod.Invoke(this, new object[] {taskObj});
 
 			return await castedTask;
 		}
@@ -318,6 +320,7 @@ namespace GameLogic {
 		public ConfigDatabase GetConfig<T>(object source) where T : System.Enum {
 			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
+			if (loadAssetHandles == null) return null;
 			var name = ConfigUtils.GetConfigDataNameByEnum<T>();
 			foreach (var assetHandle in loadAssetHandles) {
 				if (assetHandle.IsDone && assetHandle.AssetObject.name == name) {
@@ -337,7 +340,7 @@ namespace GameLogic {
 
 		private async UniTask<object> CastToObject<T>(UniTask<T> task) {
 			var result = await task;
-			return (object)result;
+			return (object) result;
 		}
 	}
 }
