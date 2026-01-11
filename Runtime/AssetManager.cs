@@ -17,19 +17,25 @@ namespace GameLogic {
 		/// 读取资源
 		/// </summary>
 		public async UniTask<AssetHandle> LoadAssetAsync<T>(string name, object source) where T : UnityEngine.Object {
+			source ??= this;
 			var hasAssetResult = GameModule.Resource.HasAsset(name);
 			if (hasAssetResult is HasAssetResult.NotExist or HasAssetResult.Valid) {
 				Log.Error($"AssetManager LoadAssetAsync {name} is Null");
 				return null;
 			}
 
-			if (source != null) {
-				m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
-				if (loadAssetHandles is {Count: > 0}) {
-					foreach (var assetHandle in loadAssetHandles) {
-						if (assetHandle.IsDone && assetHandle.AssetObject.name == name) {
-							return assetHandle;
-						}
+			List<AssetHandle> loadAssetHandles = null;
+			m_assetHandleDic.TryGetValue(source, out loadAssetHandles);
+
+			if (loadAssetHandles == null) {
+				loadAssetHandles = new List<AssetHandle>();
+				m_assetHandleDic.TryAdd(this, loadAssetHandles);
+			}
+
+			if (loadAssetHandles is {Count: > 0}) {
+				foreach (var assetHandle in loadAssetHandles) {
+					if (assetHandle.IsDone && assetHandle.AssetObject.name == name) {
+						return assetHandle;
 					}
 				}
 			}
@@ -46,15 +52,7 @@ namespace GameLogic {
 				return null;
 			}
 
-			if (source != null) {
-				m_assetHandleDic.TryGetValue(source, out var _loadAssetHandles);
-				if (_loadAssetHandles == null) {
-					_loadAssetHandles = new List<AssetHandle>();
-					m_assetHandleDic.TryAdd(source, _loadAssetHandles);
-				}
-
-				_loadAssetHandles.Add(loadAssetHandle);
-			}
+			loadAssetHandles.Add(loadAssetHandle);
 
 			return loadAssetHandle;
 		}
@@ -62,7 +60,15 @@ namespace GameLogic {
 		/// <summary>
 		/// 通过枚举读取资源配置库
 		/// </summary>
+		public async UniTask<AssetHandle> LoadConfigAsync<T>() where T : System.Enum {
+			return await LoadConfigAsync<T>(this);
+		}
+
+		/// <summary>
+		/// 通过枚举读取资源配置库
+		/// </summary>
 		public async UniTask<AssetHandle> LoadConfigAsync<T>(object source) where T : System.Enum {
+			source ??= this;
 			var name = ConfigPathUtils.GetConfigDataListPathByEnum<T>();
 			if (string.IsNullOrEmpty(name)) {
 				Log.Error($"AssetManager LoadConfigAsync {name} is Null");
@@ -75,7 +81,13 @@ namespace GameLogic {
 				return null;
 			}
 
-			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
+			List<AssetHandle> loadAssetHandles = null;
+			m_assetHandleDic.TryGetValue(source, out loadAssetHandles);
+
+			if (loadAssetHandles == null) {
+				loadAssetHandles = new List<AssetHandle>();
+				m_assetHandleDic.TryAdd(this, loadAssetHandles);
+			}
 
 			if (loadAssetHandles is {Count: > 0}) {
 				foreach (var assetHandle in loadAssetHandles) {
@@ -97,12 +109,6 @@ namespace GameLogic {
 				return null;
 			}
 
-			m_assetHandleDic.TryGetValue(source, out loadAssetHandles);
-			if (loadAssetHandles == null) {
-				loadAssetHandles = new List<AssetHandle>();
-				m_assetHandleDic.TryAdd(source, loadAssetHandles);
-			}
-
 			loadAssetHandles.Add(loadAssetHandle);
 
 			return loadAssetHandle;
@@ -112,6 +118,7 @@ namespace GameLogic {
 		/// 释放对象上所有资源
 		/// </summary>
 		public void UnLoadAllAssetInObject(object source) {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 			if (loadAssetHandles is {Count: > 0}) {
 				foreach (var loadAssetHandle in loadAssetHandles) {
@@ -126,6 +133,7 @@ namespace GameLogic {
 		/// 释放对象上资源
 		/// </summary>
 		public void UnloadAssetInObject(object source, string name) {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 			if (loadAssetHandles is {Count: > 0}) {
 				foreach (var loadAssetHandle in loadAssetHandles) {
@@ -170,6 +178,7 @@ namespace GameLogic {
 		/// 获取资源
 		/// </summary>
 		public T GetAsset<T>(object source) where T : UnityEngine.Object {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 
 			if (loadAssetHandles is {Count: > 0}) {
@@ -187,6 +196,7 @@ namespace GameLogic {
 		/// 获取资源
 		/// </summary>
 		public T GetAsset<T>(string name, object source) where T : UnityEngine.Object {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 
 			if (loadAssetHandles is {Count: > 0}) {
@@ -204,6 +214,7 @@ namespace GameLogic {
 		/// 读取资源
 		/// </summary>
 		public object GetAsset(string name, object source) {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 
 			if (loadAssetHandles is {Count: > 0}) {
@@ -221,6 +232,7 @@ namespace GameLogic {
 		/// 获取资源
 		/// </summary>
 		public object GetAsset(string name, Type type, object source) {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 
 			if (loadAssetHandles is {Count: > 0}) {
@@ -238,6 +250,7 @@ namespace GameLogic {
 		/// 获取资源
 		/// </summary>
 		public object GetAsset(Type type, object source) {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 
 			if (loadAssetHandles is {Count: > 0}) {
@@ -261,6 +274,7 @@ namespace GameLogic {
 			if (!asset) {
 				var hasAssetResult = GameModule.Resource.HasAsset(name);
 				if (!(hasAssetResult is HasAssetResult.NotExist or HasAssetResult.Valid)) {
+					source ??= this;
 					var assetHandle = await LoadAssetAsync<T>(name, source);
 					if (assetHandle.IsDone) {
 						asset = assetHandle.AssetObject as T;
@@ -278,6 +292,7 @@ namespace GameLogic {
 		/// <param name="name">资源名</param>
 		/// <param name="source">脚本源,一般是this</param>
 		public async UniTask<object> GetAssetOrLoad(Type type, string name, object source) {
+			source ??= this;
 			var methodInfo = typeof(AssetManager).GetMethod(nameof(GetAssetOrLoad), BindingFlags.Instance | BindingFlags.Public, binder: null, types: new[] {typeof(string), typeof(object)},
 				modifiers: null);
 			var genericMethod = methodInfo.MakeGenericMethod(type);
@@ -301,6 +316,7 @@ namespace GameLogic {
 		/// 通过枚举读取资源（配置）
 		/// </summary>
 		public ConfigDatabase GetConfig<T>(object source) where T : System.Enum {
+			source ??= this;
 			m_assetHandleDic.TryGetValue(source, out var loadAssetHandles);
 			var name = ConfigUtils.GetConfigDataNameByEnum<T>();
 			foreach (var assetHandle in loadAssetHandles) {
@@ -316,17 +332,7 @@ namespace GameLogic {
 		/// 通过枚举读取资源（配置）
 		/// </summary>
 		public ConfigDatabase GetConfig<T>() where T : System.Enum {
-			var name = ConfigUtils.GetConfigDataNameByEnum<T>();
-
-			foreach (var assetHandleList in m_assetHandleDic.Values) {
-				foreach (var assetHandle in assetHandleList) {
-					if (assetHandle.IsDone && assetHandle.AssetObject.name == name) {
-						return assetHandle.AssetObject as ConfigDatabase;
-					}
-				}
-			}
-
-			return null;
+			return GetConfig<T>(this);
 		}
 
 		private async UniTask<object> CastToObject<T>(UniTask<T> task) {
