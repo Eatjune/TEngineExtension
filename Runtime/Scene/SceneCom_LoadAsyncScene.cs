@@ -22,12 +22,17 @@ namespace GameLogic {
 		/// </summary>
 		public string NextSceneName;
 
+		/// <summary>
+		/// 最少读取秒
+		/// </summary>
+		public float MinLoadingTime = 0f;
+
 		private InputSystem_Actions m_inputSystemActions;
 
 		/// <summary>
 		/// 最少读取秒
 		/// </summary>
-		public static float MinLoadingTime = 0.3f;
+		public static float MIN_LOADING_TIME = 0.3f;
 
 		private float m_displayProgress;
 		private float m_timer;
@@ -54,14 +59,15 @@ namespace GameLogic {
 			m_timer += Time.unscaledDeltaTime;
 
 			// 计算插值目标：在最小加载时间内匀速过渡到 1
-			var maxProgressAllowed = Mathf.Min(m_timer / MinLoadingTime, targetProgress);
-			m_displayProgress = Mathf.MoveTowards(m_displayProgress, maxProgressAllowed, Time.unscaledDeltaTime * (1 / MinLoadingTime));
+			var loadingTime = MinLoadingTime <= 0 ? MIN_LOADING_TIME : MinLoadingTime;
+			var maxProgressAllowed = Mathf.Min(m_timer / loadingTime, targetProgress);
+			m_displayProgress = Mathf.MoveTowards(m_displayProgress, maxProgressAllowed, Time.unscaledDeltaTime * (1 / loadingTime));
 
 			Slider.localScale = new Vector3(m_displayProgress, 1, 1);
-			progress.text = (int)(m_displayProgress * 100) + " %";
+			progress.text = (int) (m_displayProgress * 100) + " %";
 
 			// 如果满足两个条件：时间到、进度到
-			if (m_timer >= MinLoadingTime && m_displayProgress >= 1f) {
+			if (m_timer >= loadingTime && m_displayProgress >= 1f) {
 				if (m_suspendLoad) {
 					progress.text = "按任意键继续";
 					foreach (var key in Keyboard.current.allKeys) {
