@@ -10,8 +10,10 @@ namespace GameLogic {
 		public bool OverrideSorting = false;
 
 		[ShowIf("@OverrideSorting")]
-		[ValueDropdown(nameof(GetSortingLayers))]
-		public string sortingLayer = "Default";
+#if UNITY_EDITOR
+        [ValueDropdown(nameof(GetSortingLayers))]
+#endif
+        public string sortingLayer = "Default";
 
 		[ShowIf("@OverrideSorting")]
 		public int SortingOder = 0;
