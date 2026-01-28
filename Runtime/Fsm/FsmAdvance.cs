@@ -1,4 +1,5 @@
-﻿using TEngine;
+﻿using System;
+using TEngine;
 
 namespace GameLogic {
 	public class FsmStateAdvance<T> : FsmState<T> where T : class {
@@ -11,10 +12,17 @@ namespace GameLogic {
 			OnInit();
 		}
 
-		/// <summary>
-		/// 延迟初始化(所有状态已经创建完毕）
-		/// </summary>
 		protected virtual void OnInit() {
+		}
+
+		public void ForceChangeState<TState>() where TState : FsmState<T> {
+			if (m_fsm.CurrentState is TState) return;
+			base.ChangeState<TState>(m_fsm);
+		}
+
+		public void ForceChangeState(Type stateType) {
+			if (m_fsm.CurrentState.GetType() == stateType) return;
+			base.ChangeState(m_fsm, stateType);
 		}
 
 		/// <summary>
