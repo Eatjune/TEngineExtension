@@ -64,7 +64,7 @@ namespace GameLogic {
 			m_displayProgress = Mathf.MoveTowards(m_displayProgress, maxProgressAllowed, Time.unscaledDeltaTime * (1 / loadingTime));
 
 			Slider.localScale = new Vector3(m_displayProgress, 1, 1);
-			progress.text = (int) (m_displayProgress * 100) + " %";
+			progress.text = (int)(m_displayProgress * 100) + " %";
 
 			// 如果满足两个条件：时间到、进度到
 			if (m_timer >= loadingTime && m_displayProgress >= 1f) {
