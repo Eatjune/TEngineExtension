@@ -7,6 +7,11 @@ using UnityEngine.Events;
 
 namespace GameLogic {
 	public class LoadingUICom : MonoBehaviour {
+		/// <summary>
+		/// 最少读取秒
+		/// </summary>
+		public float MinLoadingTime = 0.3f;
+
 		[BoxGroup("当前参数"), SerializeField, HideInEditorMode]
 		public LoadingTypeParam CurrentParam;
 
@@ -16,27 +21,39 @@ namespace GameLogic {
 		[LabelText("参数列表"), SerializeField]
 		public LoadingTypeParam[] Types;
 
-		public void SetType(string key) {
+		public void OnLoadingUIRefresh(string typeKey) {
 			if (Types is {Length: > 0}) {
 				foreach (var loadingTypeParam in Types) {
 					loadingTypeParam.RootObject.SetActive(false);
 				}
 			}
 
-			var typeParam = Types.Where(p => p.Key == key).ToList();
-			if (typeParam.Count > 0) {
-				CurrentParam = typeParam[RandomUtils.Range(0, typeParam.Count)];
+			//设置默认参数
+			if (CurrentParam == null && DefaultParam is {RootObject: { }}) {
+				CurrentParam = DefaultParam;
+			}
+
+			//如果类型不为空，则设置类型
+			if (!string.IsNullOrEmpty(typeKey)) {
+				var typeParam = Types.Where(p => p.Key == typeKey).ToList();
+				if (typeParam.Count > 0) {
+					CurrentParam = typeParam[RandomUtils.Range(0, typeParam.Count)];
+				}
+			}
+
+			if (CurrentParam is {RootObject: { }}) {
 				CurrentParam.RootObject.SetActive(true);
 			}
 		}
 
 		public void OnVisible(bool visible) {
 			if (visible) {
-				if (CurrentParam == null && DefaultParam is {RootObject: { }}) {
-					CurrentParam = DefaultParam;
-				}
 			} else {
 				CurrentParam = null;
+				if (DefaultParam is {RootObject: { }}) {
+					DefaultParam.RootObject.SetActive(false);
+				}
+
 				if (Types is {Length: > 0}) {
 					foreach (var loadingTypeParam in Types) {
 						loadingTypeParam.RootObject.SetActive(false);

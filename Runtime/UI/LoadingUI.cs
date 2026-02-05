@@ -30,6 +30,7 @@ namespace GameLogic {
 		private bool m_gcCollect;
 		private LoadSceneMode m_loadingMode;
 
+		private float m_minLoadingTime;
 		private float m_BGFadeInTime = 0f;
 		private float m_BGFadeOutTime = 0f;
 		private bool m_showProgressBar;
@@ -128,12 +129,12 @@ namespace GameLogic {
 			m_timer += Time.unscaledDeltaTime;
 
 			// 计算插值目标：在最小加载时间内匀速过渡到 1
-			var loadingTime = MIN_LOADING_TIME;
+			var loadingTime = m_minLoadingTime;
 			var maxProgressAllowed = Mathf.Min(m_timer / loadingTime, targetProgress);
 			m_displayProgress = Mathf.MoveTowards(m_displayProgress, maxProgressAllowed, Time.unscaledDeltaTime * (1 / loadingTime));
 
 			m_imgBarFg.transform.localScale = new Vector3(m_displayProgress, 1, 1);
-			m_textProgress.text = (int)(m_displayProgress * 100) + " %";
+			m_textProgress.text = (int) (m_displayProgress * 100) + " %";
 
 			// 如果满足两个条件：时间到、进度到
 			if (m_timer >= loadingTime && m_displayProgress >= 1f) {
@@ -165,8 +166,9 @@ namespace GameLogic {
 			m_BGFadeInTime = param.BGFadeInTime;
 			m_BGFadeOutTime = param.BGFadeOutTime;
 
-			if (!string.IsNullOrEmpty(param.LoadingType) && m_loadingUICom) {
-				m_loadingUICom.SetType(param.LoadingType);
+			if (m_loadingUICom) {
+				m_minLoadingTime = m_loadingUICom.MinLoadingTime;
+				m_loadingUICom.OnLoadingUIRefresh(param.LoadingType);
 			}
 		}
 
@@ -186,6 +188,7 @@ namespace GameLogic {
 		protected override void OnRefresh() {
 			base.OnRefresh();
 			//init
+			m_minLoadingTime = MIN_LOADING_TIME;
 			if (UserData is InitParam p) {
 				SetLoadingData(p);
 			}
@@ -205,8 +208,8 @@ namespace GameLogic {
 			public bool GCCollect = true;
 			public LoadSceneMode Mode = LoadSceneMode.Single;
 			public string LoadingType = "";
-			public bool ShowProgressBar = true;
-			public bool ShowBackGround = true;
+			public bool ShowProgressBar = false;
+			public bool ShowBackGround = false;
 			public float BGFadeInTime = 0f;
 			public float BGFadeOutTime = 0f;
 		}
