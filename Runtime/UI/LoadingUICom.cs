@@ -83,6 +83,7 @@ namespace GameLogic {
 			public string Key;
 			public GameObject RootObject;
 			public UnityEvent FadeInEvent;
+			public UnityEvent RunningEvent;
 			public UnityEvent FadeOutEvent;
 			public float FadeInTime;
 			public float FadeOutTime;

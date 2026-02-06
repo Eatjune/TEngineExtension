@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using LymeUtils.Common;
-using Sirenix.OdinInspector;
 using TEngine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -71,23 +69,28 @@ namespace GameLogic {
 		}
 
 		private async UniTask OnEnterLoading() {
+			//冻结游戏时间
+			Time.timeScale = 0f;
 			//淡入动画
 			var fadeInTime = 0f;
 			if (m_loadingUICom is {CurrentParam: { }}) {
 				fadeInTime = m_loadingUICom.CurrentParam.FadeInTime;
-				m_loadingUICom.CurrentParam.FadeInEvent.Invoke();
+				if (m_loadingUICom.CurrentParam.FadeInEvent != null) m_loadingUICom.CurrentParam.FadeInEvent.Invoke();
 			}
 
 			//背景淡入
+			m_imgBackground.color = m_imgBackground.color.SetAlpha(0f);
 			if (m_BGFadeInTime > 0 && m_showBackGround) {
-				m_imgBackground.color.SetAlpha(0);
 				m_imgBackground.DOFade(1, m_BGFadeInTime).SetUpdate(true).SetEase(Ease.Linear);
 			}
 
 			var delayTime = Mathf.Max(m_BGFadeInTime, fadeInTime);
+			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime), DelayType.Realtime);
+			m_imgBackground.color = m_imgBackground.color.SetAlpha(1f);
 
-			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime));
-			m_imgBackground.color.SetAlpha(1f);
+			if (m_loadingUICom is {CurrentParam: {RunningEvent: { }}}) {
+				m_loadingUICom.CurrentParam.RunningEvent.Invoke();
+			}
 		}
 
 		private async UniTask OnExitLoading() {
@@ -95,27 +98,38 @@ namespace GameLogic {
 			m_loadFinish = true;
 
 			m_goProgressBar.SetActive(false);
+			//检测卡顿
+			var frameTime = 0f;
+			do {
+				var start = Time.realtimeSinceStartup;
+				await UniTask.Yield();
+				frameTime = Time.realtimeSinceStartup - start;
+			}
+			//直到帧数稳定
+			while (frameTime > 0.05f);
 
+			//恢复游戏时间
+			Time.timeScale = 1f;
 			//淡出动画
 			var fadeOutTime = 0f;
 			if (m_loadingUICom is {CurrentParam: { }}) {
 				fadeOutTime = m_loadingUICom.CurrentParam.FadeOutTime;
-				m_loadingUICom.CurrentParam.FadeOutEvent.Invoke();
+				if (m_loadingUICom.CurrentParam.FadeOutEvent != null) m_loadingUICom.CurrentParam.FadeOutEvent.Invoke();
 			}
 
 			//背景淡出
+			m_imgBackground.color = m_imgBackground.color.SetAlpha(1);
 			if (m_BGFadeOutTime > 0 && m_showBackGround) {
-				m_imgBackground.color.SetAlpha(1);
 				m_imgBackground.DOFade(0, m_BGFadeOutTime).SetUpdate(true).SetEase(Ease.Linear);
 			}
 
 			var delayTime = Mathf.Max(m_BGFadeOutTime, fadeOutTime);
-			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime));
-			m_imgBackground.color.SetAlpha(0);
+			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime), DelayType.Realtime);
+			m_imgBackground.color = m_imgBackground.color.SetAlpha(0);
 
-			UIUtils.Hide(this);
 			Log.Debug($"Open scene : {LoadSceneName}");
 			GameEvent.Get<IEventScene>().OpenScene(LoadSceneName);
+			UIUtils.Hide(this);
 		}
 
 		private void OnLoadingSceneProgress(float _progress) {
@@ -196,7 +210,7 @@ namespace GameLogic {
 			m_displayProgress = m_timer = 0f;
 			m_loadFinish = false;
 			m_goProgressBar.SetActive(m_showProgressBar);
-			m_imgBackground.color.SetAlpha(1f);
+			m_imgBackground.color = m_imgBackground.color.SetAlpha(0f);
 			m_imgBackground.gameObject.SetActive(m_showBackGround);
 
 			OnEnterLoading();

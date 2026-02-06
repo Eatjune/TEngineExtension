@@ -72,7 +72,7 @@ namespace GameLogic {
 		/// <param name="loadSceneName">需要加载的场景名称</param>
 		/// <param name="mode">场景加载模式</param>
 		public static async UniTask<Scene> LoadSceneByScene(string loadSceneName, LoadSceneMode mode = LoadSceneMode.Single) {
-			return await LoadScene(loadSceneName, false, mode);
+			return await LoadSceneByScene(loadSceneName, false, mode);
 		}
 
 		/// <summary>
