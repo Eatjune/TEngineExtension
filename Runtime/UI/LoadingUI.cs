@@ -61,7 +61,7 @@ namespace GameLogic {
 		public async UniTask<Scene> LoadScene() {
 			//loading背景透明度为1时表示已经准备好
 			await UniTask.WaitUntil(() => Math.Abs(m_imgBackground.color.a - 1f) < 0.02f);
-			m_goProgressBar.SetActive(m_showProgressBar);
+
 			GameEvent.Get<IEventScene>().LoadScene(LoadSceneName);
 
 			var scene = await GameModule.Scene.LoadSceneAsync(LoadSceneName, m_loadingMode, true, 100, m_gcCollect, OnLoadingSceneProgress);
@@ -80,11 +80,11 @@ namespace GameLogic {
 
 			//背景淡入
 			m_imgBackground.color = m_imgBackground.color.SetAlpha(0f);
-			if (m_BGFadeInTime > 0 && m_showBackGround) {
-				m_imgBackground.DOFade(1, m_BGFadeInTime).SetUpdate(true).SetEase(Ease.Linear);
+			var delayTime = Mathf.Max(m_BGFadeInTime, fadeInTime);
+			if (delayTime > 0 && m_showBackGround) {
+				m_imgBackground.DOFade(1, delayTime).SetUpdate(true).SetEase(Ease.Linear);
 			}
 
-			var delayTime = Mathf.Max(m_BGFadeInTime, fadeInTime);
 			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime), DelayType.Realtime);
 			m_imgBackground.color = m_imgBackground.color.SetAlpha(1f);
 
@@ -97,7 +97,6 @@ namespace GameLogic {
 			if (m_loadFinish) return;
 			m_loadFinish = true;
 
-			m_goProgressBar.SetActive(false);
 			//检测卡顿
 			var frameTime = 0f;
 			do {
@@ -107,6 +106,8 @@ namespace GameLogic {
 			}
 			//直到帧数稳定
 			while (frameTime > 0.05f);
+
+			m_goProgressBar.SetActive(false);
 
 			//恢复游戏时间
 			Time.timeScale = 1f;
@@ -119,11 +120,11 @@ namespace GameLogic {
 
 			//背景淡出
 			m_imgBackground.color = m_imgBackground.color.SetAlpha(1);
-			if (m_BGFadeOutTime > 0 && m_showBackGround) {
-				m_imgBackground.DOFade(0, m_BGFadeOutTime).SetUpdate(true).SetEase(Ease.Linear);
+			var delayTime = Mathf.Max(m_BGFadeOutTime, fadeOutTime);
+			if (delayTime > 0 && m_showBackGround) {
+				m_imgBackground.DOFade(0, delayTime).SetUpdate(true).SetEase(Ease.Linear);
 			}
 
-			var delayTime = Mathf.Max(m_BGFadeOutTime, fadeOutTime);
 			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime), DelayType.Realtime);
 			m_imgBackground.color = m_imgBackground.color.SetAlpha(0);
 
@@ -148,7 +149,7 @@ namespace GameLogic {
 			m_displayProgress = Mathf.MoveTowards(m_displayProgress, maxProgressAllowed, Time.unscaledDeltaTime * (1 / loadingTime));
 
 			m_imgBarFg.transform.localScale = new Vector3(m_displayProgress, 1, 1);
-			m_textProgress.text = (int) (m_displayProgress * 100) + " %";
+			m_textProgress.text = (int)(m_displayProgress * 100) + " %";
 
 			// 如果满足两个条件：时间到、进度到
 			if (m_timer >= loadingTime && m_displayProgress >= 1f) {
@@ -182,7 +183,6 @@ namespace GameLogic {
 
 			if (m_loadingUICom) {
 				m_minLoadingTime = m_loadingUICom.MinLoadingTime;
-				m_loadingUICom.OnLoadingUIRefresh(param.LoadingType);
 			}
 		}
 
@@ -202,14 +202,25 @@ namespace GameLogic {
 		protected override void OnRefresh() {
 			base.OnRefresh();
 			//init
+			var type = "";
 			m_minLoadingTime = MIN_LOADING_TIME;
 			if (UserData is InitParam p) {
+				type = p.LoadingType;
 				SetLoadingData(p);
 			}
 
+			//刷新loadingUIcom
+			if (m_loadingUICom) {
+				m_loadingUICom.OnLoadingUIRefresh(type);
+			}
+
+			//设置进度条和数字
 			m_displayProgress = m_timer = 0f;
-			m_loadFinish = false;
 			m_goProgressBar.SetActive(m_showProgressBar);
+			m_imgBarFg.transform.localScale = new Vector3(m_displayProgress, 1, 1);
+			m_textProgress.text = "0 %";
+
+			m_loadFinish = false;
 			m_imgBackground.color = m_imgBackground.color.SetAlpha(0f);
 			m_imgBackground.gameObject.SetActive(m_showBackGround);
 
