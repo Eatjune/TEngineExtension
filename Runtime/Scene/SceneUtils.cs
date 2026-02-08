@@ -13,8 +13,8 @@ namespace GameLogic {
 		/// <param name="loadSceneName">需要加载的场景名称</param>
 		/// <param name="mode">场景加载模式</param>
 		/// <param name="loadingType">loading样式</param>
-		public static async UniTask<Scene> LoadScene(string loadSceneName, LoadSceneMode mode = LoadSceneMode.Single, string loadingType = "") {
-			return await LoadScene(loadSceneName, false, mode, loadingType);
+		public static async UniTask LoadScene(string loadSceneName, LoadSceneMode mode = LoadSceneMode.Single, string loadingType = "") {
+			await LoadScene(loadSceneName, false, mode, loadingType);
 		}
 
 		/// <summary>
@@ -24,16 +24,24 @@ namespace GameLogic {
 		/// <param name="suspendLoad">加载完毕时是否主动挂起</param>
 		/// <param name="mode">场景加载模式</param>
 		/// <param name="loadingType">loading样式</param>
-		public static async UniTask<Scene> LoadScene(string loadSceneName, bool suspendLoad, LoadSceneMode mode = LoadSceneMode.Single, string loadingType = "") {
-			return await LoadScene(loadSceneName, new LoadingUI.InitParam() {SceneName = loadSceneName, SuspendLoad = suspendLoad, Mode = mode, LoadingType = loadingType});
+		public static async UniTask LoadScene(string loadSceneName, bool suspendLoad, LoadSceneMode mode = LoadSceneMode.Single, string loadingType = "") {
+			await LoadScene(loadSceneName, new LoadingUI.InitParam() {SceneName = loadSceneName, SuspendLoad = suspendLoad, Mode = mode, LoadingType = loadingType});
 		}
 
 		/// <summary>
 		/// 使用loading异步读取场景
 		/// </summary>
 		/// <param name="loadSceneName">需要加载的场景名称</param>
-		public static async UniTask<Scene> LoadScene(string loadSceneName, LoadingUI.InitParam param) {
+		public static async UniTask LoadScene(string loadSceneName, LoadingUI.InitParam param) {
 			try {
+				//等待直到loading关闭
+				if (GameModule.UI.HasWindow<LoadingUI>()) {
+					var _loadingUI = await GameModule.UI.GetUIAsyncAwait<LoadingUI>();
+					if (_loadingUI != null && _loadingUI.Visible) {
+						return;
+					}
+				}
+
 				if (GameModule.Scene.IsContainScene(loadSceneName)) {
 					throw new Exception($"场景{loadSceneName}已存在");
 				}
@@ -41,7 +49,7 @@ namespace GameLogic {
 				param.SceneName = loadSceneName;
 
 				var loadingUI = await GameModule.UI.ShowUIAsyncAwait<LoadingUI>(param);
-				return await loadingUI.LoadScene();
+				await loadingUI.LoadScene();
 			}
 			catch (Exception e) {
 				throw new Exception($"加载Loading场景出错:{e}");
@@ -55,8 +63,8 @@ namespace GameLogic {
 		/// <param name="mode">场景加载模式</param>
 		/// <param name="fadeInTime">背景蒙版淡入时间</param>
 		/// <param name="fadeOutTime">背景蒙版淡出时间</param>
-		public static async UniTask<Scene> LoadSceneByDefault(string loadSceneName, LoadSceneMode mode = LoadSceneMode.Single, float fadeInTime = 0.2f, float fadeOutTime = 0.2f) {
-			return await LoadScene(loadSceneName, new LoadingUI.InitParam() {
+		public static async UniTask LoadSceneByDefault(string loadSceneName, LoadSceneMode mode = LoadSceneMode.Single, float fadeInTime = 0.2f, float fadeOutTime = 0.2f) {
+			await LoadScene(loadSceneName, new LoadingUI.InitParam() {
 				SceneName = loadSceneName, SuspendLoad = false, Mode = mode, ShowBackGround = true, ShowProgressBar = true, BGFadeInTime = fadeInTime,
 				BGFadeOutTime = fadeOutTime
 			});

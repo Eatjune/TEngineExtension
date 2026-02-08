@@ -60,7 +60,7 @@ namespace GameLogic {
 
 		public async UniTask<Scene> LoadScene() {
 			//loading背景透明度为1时表示已经准备好
-			await UniTask.WaitUntil(() => Math.Abs(m_imgBackground.color.a - 1f) < 0.02f);
+			await m_taskControl.WaitUntil(() => Math.Abs(m_imgBackground.color.a - 1f) < 0.02f);
 
 			GameEvent.Get<IEventScene>().LoadScene(LoadSceneName);
 
@@ -85,7 +85,7 @@ namespace GameLogic {
 				m_imgBackground.DOFade(1, delayTime).SetUpdate(true).SetEase(Ease.Linear);
 			}
 
-			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime), DelayType.Realtime);
+			if (delayTime > 0) await m_taskControl.Delay(delayTime, true);
 			m_imgBackground.color = m_imgBackground.color.SetAlpha(1f);
 
 			if (m_loadingUICom is {CurrentParam: {RunningEvent: { }}}) {
@@ -101,7 +101,7 @@ namespace GameLogic {
 			var frameTime = 0f;
 			do {
 				var start = Time.realtimeSinceStartup;
-				await UniTask.Yield();
+				await m_taskControl.Yield();
 				frameTime = Time.realtimeSinceStartup - start;
 			}
 			//直到帧数稳定
@@ -125,7 +125,7 @@ namespace GameLogic {
 				m_imgBackground.DOFade(0, delayTime).SetUpdate(true).SetEase(Ease.Linear);
 			}
 
-			if (delayTime > 0) await UniTask.Delay(TimeSpan.FromSeconds(delayTime), DelayType.Realtime);
+			if (delayTime > 0) await m_taskControl.Delay(delayTime, true);
 			m_imgBackground.color = m_imgBackground.color.SetAlpha(0);
 
 			Log.Debug($"Open scene : {LoadSceneName}");
@@ -149,7 +149,7 @@ namespace GameLogic {
 			m_displayProgress = Mathf.MoveTowards(m_displayProgress, maxProgressAllowed, Time.unscaledDeltaTime * (1 / loadingTime));
 
 			m_imgBarFg.transform.localScale = new Vector3(m_displayProgress, 1, 1);
-			m_textProgress.text = (int)(m_displayProgress * 100) + " %";
+			m_textProgress.text = (int) (m_displayProgress * 100) + " %";
 
 			// 如果满足两个条件：时间到、进度到
 			if (m_timer >= loadingTime && m_displayProgress >= 1f) {
@@ -158,14 +158,14 @@ namespace GameLogic {
 					foreach (var key in Keyboard.current.allKeys) {
 						if (key is {wasPressedThisFrame: true}) {
 							if (GameModule.Scene.UnSuspend(LoadSceneName)) {
-								OnExitLoading();
+								OnExitLoading().Forget();
 								break;
 							}
 						}
 					}
 				} else {
 					if (GameModule.Scene.UnSuspend(LoadSceneName)) {
-						OnExitLoading();
+						OnExitLoading().Forget();
 					}
 				}
 			}
@@ -186,10 +186,13 @@ namespace GameLogic {
 			}
 		}
 
+		private UniTaskControl m_taskControl;
+
 		protected override void OnCreate() {
 			base.OnCreate();
 
 			m_loadingUICom = gameObject.GetComponentInChildren<LoadingUICom>(true);
+			m_taskControl = new UniTaskControl(false);
 		}
 
 		protected override void OnSetVisible(bool visible) {
@@ -202,6 +205,7 @@ namespace GameLogic {
 		protected override void OnRefresh() {
 			base.OnRefresh();
 			//init
+
 			var type = "";
 			m_minLoadingTime = MIN_LOADING_TIME;
 			if (UserData is InitParam p) {

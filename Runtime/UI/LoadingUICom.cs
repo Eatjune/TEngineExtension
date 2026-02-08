@@ -29,19 +29,19 @@ namespace GameLogic {
 			}
 
 			//设置默认参数
-			if (CurrentParam == null && DefaultParam is {RootObject: { }}) {
+			if (CurrentParam == null || CurrentParam.RootObject == null && DefaultParam != null && DefaultParam.RootObject != null) {
 				CurrentParam = DefaultParam;
 			}
 
 			//如果类型不为空，则设置类型
-			if (!string.IsNullOrEmpty(typeKey)) {
+			if (!string.IsNullOrEmpty(typeKey) && Types is {Length: > 0}) {
 				var typeParam = Types.Where(p => p.Key == typeKey).ToList();
 				if (typeParam.Count > 0) {
 					CurrentParam = typeParam[RandomUtils.Range(0, typeParam.Count)];
 				}
 			}
 
-			if (CurrentParam is {RootObject: { }}) {
+			if (CurrentParam != null && CurrentParam.RootObject != null) {
 				CurrentParam.RootObject.SetActive(true);
 			}
 		}
