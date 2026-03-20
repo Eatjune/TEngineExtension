@@ -1,13 +1,17 @@
-﻿{
+{
   "name": "TEngineExtension.Editor",
-  "includePlatforms": [
-    "Editor"
-  ],
+  "rootNamespace": "",
   "references": [
     "GameLogic",
     "LymeUtils.Runtime",
     "Unity.EditorCoroutines.Editor",
-    "spine-unity"
+    "spine-unity",
+    "LymeUtils.Editor",
+    "TEngine.Runtime",
+    "UniTask"
+  ],
+  "includePlatforms": [
+    "Editor"
   ],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
@@ -15,5 +19,6 @@
   "precompiledReferences": [],
   "autoReferenced": true,
   "defineConstraints": [],
+  "versionDefines": [],
   "noEngineReferences": false
 }
