@@ -43,8 +43,7 @@ namespace GameLogic {
 			var loadAssetHandle = GameModule.Resource.LoadAssetAsyncHandle<T>(name);
 			try {
 				await loadAssetHandle.Task;
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				throw new Exception($"AssetManager LoadAssetAsyncHandle Failed : {e.Message}");
 			}
 
@@ -101,8 +100,7 @@ namespace GameLogic {
 			var loadAssetHandle = GameModule.Resource.LoadAssetAsyncHandle<ConfigDatabase>(name);
 			try {
 				await loadAssetHandle.Task;
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				throw new Exception($"AssetManager LoadConfigAsync Failed : {e.Message}");
 			}
 
@@ -295,13 +293,13 @@ namespace GameLogic {
 		/// <param name="source">脚本源,一般是this</param>
 		public async UniTask<object> GetAssetOrLoad(Type type, string name, object source) {
 			source ??= this;
-			var methodInfo = typeof(AssetManager).GetMethod(nameof(GetAssetOrLoad), BindingFlags.Instance | BindingFlags.Public, binder: null,
-				types: new[] {typeof(string), typeof(object)}, modifiers: null);
+			var methodInfo = typeof(AssetManager).GetMethod(nameof(GetAssetOrLoad), BindingFlags.Instance | BindingFlags.Public, binder: null, types: new[] {typeof(string), typeof(object)},
+				modifiers: null);
 			var genericMethod = methodInfo.MakeGenericMethod(type);
 			var taskObj = genericMethod.Invoke(this, new object[] {name, source});
 
 			var castMethod = this.GetType().GetMethod(nameof(CastToObject), BindingFlags.NonPublic | BindingFlags.Instance) !.MakeGenericMethod(type);
-			var castedTask = (UniTask<object>) castMethod.Invoke(this, new object[] {taskObj});
+			var castedTask = (UniTask<object>)castMethod.Invoke(this, new object[] {taskObj});
 
 			return await castedTask;
 		}
@@ -340,7 +338,7 @@ namespace GameLogic {
 
 		private async UniTask<object> CastToObject<T>(UniTask<T> task) {
 			var result = await task;
-			return (object) result;
+			return (object)result;
 		}
 	}
 }
