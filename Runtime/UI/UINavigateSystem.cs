@@ -16,6 +16,11 @@ namespace GameLogic {
 		public bool UINavigateActive { get; private set; } = false;
 
 		/// <summary>
+		/// 是否处于导航状态，鼠标显示则为导航状态
+		/// </summary>
+		public bool InNavigate => !Cursor.visible;
+
+		/// <summary>
 		/// 导航界面
 		/// </summary>
 		public Transform NavigateUI;
