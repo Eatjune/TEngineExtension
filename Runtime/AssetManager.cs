@@ -71,7 +71,7 @@ namespace GameLogic {
 			source ??= this;
 			var name = ConfigPathUtils.GetConfigDataListPathByEnum<T>();
 			if (string.IsNullOrEmpty(name)) {
-				Log.Error($"AssetManager LoadConfigAsync {name} is Null");
+				Log.Error($"AssetManager LoadConfigAsync {typeof(T).Name} is Null");
 				return null;
 			}
 
