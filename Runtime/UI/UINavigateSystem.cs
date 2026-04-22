@@ -75,6 +75,7 @@ namespace GameLogic {
 		/// </summary>
 		private void UpdateHoverFocus() {
 			if (Mouse.current == null) return;
+			if (NavigateUI == null) return;
 
 			//鼠标移动时显示鼠标
 			var mouseDelta = Mouse.current.delta.ReadValue();
